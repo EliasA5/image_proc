@@ -35,7 +35,7 @@ figure;
 sgtitle('Brightness adjustments')
 subplot(2,2,1);
 imagesc(picasso_grayscale);
-title('Normal picture')
+title('Original image')
 colormap gray;
 action_vec = ["mul","mul","add"];
 parameter_vec = [2,0.6,200];
@@ -54,7 +54,7 @@ sgtitle('Contranst adjustments with different ranges')
 colormap gray;
 subplot(2,2,1);
 imagesc(picasso_normalized)
-title('Normal picture')
+title('Original image')
 
 subplot(2,2,2);
 adj_img = adjust_contrast(picasso_normalized,0.45,0.9);
@@ -70,7 +70,23 @@ subplot(2,2,4);
 adj_img = adjust_contrast(picasso_normalized,1,0);
 imagesc(adj_img);
 title('[1,0]')
+
+
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% 1.5
+
+bits_vec = [6,4,2,1];
+figure;
+sgtitle('Quantizing image using different bits')
+colormap gray;
+for i = 1:4
+    quantized_img = quantize_img(picasso_normalized,bits_vec(i));
+    subplot(2,2,i);
+    imagesc(quantized_img);
+    title([num2str(bits_vec(i)) ' bit'])
+end
+
+
 
 function [gray_img_norm] = dip_GN_imread(file_name)
     img = imread(file_name);
@@ -108,4 +124,16 @@ function [adj_img] = adjust_contrast(img,range_low,range_high)
     adj_img = img;
     adj_img((img < range_low)) = range_low;
     adj_img((img > range_high)) = range_high;
+end
+
+function [quantized_img] = quantize_img(img,bits)
+    quantized_img = img;
+    levels = 2^(bits);
+    levesl_vec = (0:(levels))/(levels);
+    val_vec = (0:(levels-1))/(levels-1);
+    for i = (1:levels)
+        low_b = levesl_vec(i);
+        high_b = levesl_vec(i+1);
+        quantized_img((img(:) >= low_b)&(img(:) < high_b)) = val_vec(i);
+    end
 end
