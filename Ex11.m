@@ -32,32 +32,44 @@ end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% 1.3
 figure;
+sgtitle('Brightness adjustments')
 subplot(2,2,1);
 imagesc(picasso_grayscale);
+title('Normal picture')
 colormap gray;
+action_vec = ["mul","mul","add"];
+parameter_vec = [2,0.6,200];
 for i = 1:3
-    action_vec = ["mul","mul","add"];
-    parameter_vec = [2,0.6,200];
     adj_img = adjust_brightness(picasso_grayscale,action_vec(i),parameter_vec(i));
     subplot(2,2,1+i);
     imagesc(adj_img);
+    title([ 'Action = ' + action_vec(i) + ' ,Parameter = ' num2str(parameter_vec(i)) ])
 end
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% 1.4
 
 figure;
+sgtitle('Contranst adjustments with different ranges')
 colormap gray;
-subplot(1,3,1);
+subplot(2,2,1);
+imagesc(picasso_normalized)
+title('Normal picture')
+
+subplot(2,2,2);
 adj_img = adjust_contrast(picasso_normalized,0.45,0.9);
 imagesc(adj_img);
-subplot(1,3,2);
+title('[0.45,0.9]')
+
+subplot(2,2,3);
 adj_img = adjust_contrast(picasso_normalized,0.4,0.5);
 imagesc(adj_img);
-subplot(1,3,3);
+title('[0.4,0.5]')
+
+subplot(2,2,4);
 adj_img = adjust_contrast(picasso_normalized,1,0);
 imagesc(adj_img);
-
+title('[1,0]')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 function [gray_img_norm] = dip_GN_imread(file_name)
