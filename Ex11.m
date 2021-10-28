@@ -7,6 +7,7 @@ picasso_normalized = dip_GN_imread('picasso.jpg');
 
 figure;
 imagesc(picasso_grayscale);
+set(gca,'XTick',[], 'YTick', [])
 colormap gray;
 
 
@@ -35,6 +36,7 @@ figure;
 sgtitle('Brightness adjustments')
 subplot(2,2,1);
 imagesc(picasso_grayscale);
+set(gca,'XTick',[], 'YTick', [])
 title('Original image')
 colormap gray;
 action_vec = ["mul","mul","add"];
@@ -43,6 +45,7 @@ for i = 1:3
     adj_img = adjust_brightness(picasso_grayscale,action_vec(i),parameter_vec(i));
     subplot(2,2,1+i);
     imagesc(adj_img);
+    set(gca,'XTick',[], 'YTick', [])
     title([ 'Action = ' + action_vec(i) + ' ,Parameter = ' num2str(parameter_vec(i)) ])
 end
 
@@ -54,21 +57,25 @@ sgtitle('Contranst adjustments with different ranges')
 colormap gray;
 subplot(2,2,1);
 imagesc(picasso_normalized)
+set(gca,'XTick',[], 'YTick', [])
 title('Original image')
 
 subplot(2,2,2);
 adj_img = adjust_contrast(picasso_normalized,0.45,0.9);
 imagesc(adj_img);
+set(gca,'XTick',[], 'YTick', [])
 title('[0.45,0.9]')
 
 subplot(2,2,3);
 adj_img = adjust_contrast(picasso_normalized,0.4,0.5);
 imagesc(adj_img);
+set(gca,'XTick',[], 'YTick', [])
 title('[0.4,0.5]')
 
 subplot(2,2,4);
 adj_img = adjust_contrast(picasso_normalized,1,0);
 imagesc(adj_img);
+set(gca,'XTick',[], 'YTick', [])
 title('[1,0]')
 
 
@@ -79,10 +86,12 @@ bits_vec = [6,4,2,1];
 figure;
 sgtitle('Quantizing image using different bits')
 colormap gray;
+set(gca,'XTick',[], 'YTick', [])
 for i = 1:4
     quantized_img = quantize_img(picasso_normalized,bits_vec(i));
     subplot(2,2,i);
     imagesc(quantized_img);
+    set(gca,'XTick',[], 'YTick', [])
     title([num2str(bits_vec(i)) ' bit'])
 end
 
