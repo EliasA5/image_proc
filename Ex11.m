@@ -11,7 +11,6 @@ set(gca,'XTick',[], 'YTick', [])
 colormap gray;
 
 
-
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% 1.2
 
@@ -246,6 +245,116 @@ title('Filfil Face Histogram')
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%% 2.2
 dog_normalized = dip_GN_imread('dog.jpg');
+%mean
+figure;
+colormap gray;
+sgtitle('Applying mean filter to Dog image using different filter sizes:')
+subplot(2,2,1);
+imagesc(dog_normalized);
+set(gca,'XTick',[], 'YTick', [])
+title('Original Image')
+colorbar;
+caxis manual
+caxis([0 1]);
+
+K = [3 5 9];
+for i = 1:length(K)
+    mean_dog = mean_filter(dog_normalized, K(i));
+    subplot(2,2,i+1);
+    imagesc(mean_dog);
+    set(gca,'XTick',[], 'YTick', [])
+    title(['k = ' num2str(K(i))])
+    colorbar;
+    caxis manual
+    caxis([0 1]);
+end
+
+%median
+figure;
+colormap gray;
+sgtitle('Applying median filter to Dog image using different filter sizes:')
+subplot(2,2,1);
+imagesc(dog_normalized);
+set(gca,'XTick',[], 'YTick', [])
+title('Original Image')
+colorbar;
+caxis manual
+caxis([0 1]);
+
+K = [3 5 9];
+for i = 1:length(K)
+    median_dog = median_filter(dog_normalized, K(i));
+    subplot(2,2,i+1);
+    imagesc(median_dog);
+    set(gca,'XTick',[], 'YTick', [])
+    title(['k = ' num2str(K(i))])
+    colorbar;
+    caxis manual
+    caxis([0 1]);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% 2.3
+%gaussian
+figure;
+colormap gray;
+sgtitle('Applying gaussian filter to Dog image using different filter and sigma sizes:')
+subplot(3,2,1);
+imagesc(dog_normalized);
+set(gca,'XTick',[], 'YTick', [])
+title('Original Image')
+colorbar;
+caxis manual
+caxis([0 1]);
+
+K = [3 3 9 9];
+Sigma = [0.2 1.7 0.2 1.7];
+for i = 1:length(K)
+    gaussian_dog = dip_gaussian_filter(dog_normalized, K(i), Sigma(i));
+    subplot(3,2,i+2);
+    imagesc(gaussian_dog);
+    set(gca,'XTick',[], 'YTick', [])
+    title(['k = ' num2str(K(i)) ', sigma = ' num2str(Sigma(i))])
+    colorbar;
+    caxis manual
+    caxis([0 1]);
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% 2.4
+
+diffused_dog = imdiffusefilt(dog_normalized);
+
+figure;
+colormap gray;
+sgtitle('Applying Anisotropic Diffusion Filter to the Dog image');
+
+subplot(1,2,1);
+imagesc(dog_normalized);
+set(gca,'XTick',[], 'YTick', [])
+title('Original Image')
+colorbar;
+caxis manual
+caxis([0 1]);
+
+subplot(1,2,2);
+imagesc(diffused_dog);
+set(gca,'XTick',[], 'YTick', [])
+title('Filtered Image')
+colorbar;
+caxis manual
+caxis([0 1]);
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%%%% 2.5
+
+section_25(dog_normalized);
+
+square = double(imread('square.jpg'));
+square_normalized = (square - min(square(:)))./ (max(square(:)) - min(square(:)));
+section_25(square_normalized);
+
 
 
 
@@ -254,7 +363,6 @@ function [gray_img_norm] = dip_GN_imread(file_name)
     img_gray = double(rgb2gray(img));
     gray_img_norm = (img_gray - min(img_gray(:)))./ (max(img_gray(:)) - min(img_gray(:)));
 end
-
 
 function [counts, bins] = dip_histogram(img,nbins)
     bins = (0:(nbins-1))/(nbins-1);
@@ -267,7 +375,7 @@ function [counts, bins] = dip_histogram(img,nbins)
 
 end
 
-function [adj_img] = adjust_brightness(img, action, parameter)
+function [adj_img] = adjust_brightness(img, action, parameter) % 1.3
     if action == "add"
         func = @(x,y) x + y;
     elseif action == "mul"
@@ -276,39 +384,39 @@ function [adj_img] = adjust_brightness(img, action, parameter)
         error('Not a valid operator')
     end
     adj_img = func(img, parameter);
+    adj_img(adj_img > 1) = 1;
+    adj_img(adj_img < 0) = 0;
 end
-
 
 function [adj_img] = adjust_contrast(img,range_low,range_high)
-    adj_img = img *(range_high-range_low) + range_low;
+    adj_img = img * (range_high-range_low) + range_low;
 end
 
-function [quantized_img] = quantize_img(img,bits)
-    quantized_img = (((img * 255 + 1) ./ 2^(8 - bits)) - 1) / 255;
-    levels = 2^(bits);
-    levesl_vec = (0:(levels))/(levels);
-    val_vec = (0:(levels-1))/(levels-1);
-    for i = (1:levels)
-        low_b = levesl_vec(i);
-        high_b = levesl_vec(i+1);
-        quantized_img((img(:) >= low_b)&(img(:) < high_b)) = val_vec(i);
-    end
+function [quantized_img] = quantize_img(img,bits) % 1.5
+    quantized_img = floor(img ./ 2^(8-bits));
 end
 
 function [filtered_img] = filter(img, k, filt)
     to_extend = floor(k/2);
-    filtered_img_y = [img(1:to_extend, :); img ; img(end-to_extend+1:end, :)];
-    filtered_img_x = [filtered_img_y(:, 1:to_extend), filtered_img_y , filtered_img_y(:, end-to_extend+1:end)];
+    %pad the matrix at the top and the bottom side, i.e. repeat the row line to_extend times at the top, and the end row to_extend times at the bottom
+    filtered_img_y = [repmat(img(1, :), to_extend, 1) ; img; repmat(img(end, :), to_extend, 1)];
+    %same for the left and right columns
+    filtered_img_x = [repmat(filtered_img_y(:, 1), 1, to_extend), filtered_img_y , repmat(filtered_img_y(:, end), 1, to_extend)];
     filtered_img = zeros(size(filtered_img_x));
     for m=(1:size(img, 1))+to_extend
         for n=(1:size(img, 2))+to_extend
-                filtered_img(m,n) = sum(filt .* filtered_img_x((m:m+k-1)-to_extend, (n:n+k-1)-to_extend));
+                filtered_img(m,n) = sum(filt .* filtered_img_x((m:m+k-1)-to_extend, (n:n+k-1)-to_extend), 'all');
         end
     end
+    %cut the right values
     filtered_img = filtered_img( (1:size(img, 1))+to_extend, (1:size(img, 2))+to_extend);
+    %clip the values if they become too big (gaussian with low sigma for
+    %example)
+    filtered_img(filtered_img > 1) = 1;
+    filtered_img(filtered_img < 0) = 0;
 end
 
-function [filtered_img] = mean_filter(img,k) %assume k is odd
+function [filtered_img] = mean_filter(img, k) %assume k is odd
     if mod(k,2) == 0
         error('filter size must be an odd number');
     end
@@ -318,8 +426,8 @@ end
 
 function [filtered_img] = median_filter(img, k)
     to_extend = floor(k/2);
-    filtered_img_y = [img(1:to_extend, :); img ; img(end-to_extend+1:end, :)];
-    filtered_img_x = [filtered_img_y(:, 1:to_extend), filtered_img_y , filtered_img_y(:, end-to_extend+1:end)];
+    filtered_img_y = [repmat(img(1, :), to_extend, 1) ; img; repmat(img(end, :), to_extend, 1)];
+    filtered_img_x = [repmat(filtered_img_y(:, 1), 1, to_extend), filtered_img_y , repmat(filtered_img_y(:, end), 1, to_extend)];
     filtered_img = zeros(size(filtered_img_x));
     for m=(1:size(img, 1))+to_extend
         for n=(1:size(img, 2))+to_extend
@@ -327,4 +435,147 @@ function [filtered_img] = median_filter(img, k)
         end
     end
     filtered_img = filtered_img( (1:size(img, 1))+to_extend, (1:size(img, 2))+to_extend);
+end
+
+function [filtered_img] = dip_gaussian_filter(img, k, sigma) %assume k is odd
+    if mod(k,2) == 0
+        error('filter size must be an odd number');
+    end
+    edges = floor(k/2);
+    [coords_x, coords_y] = meshgrid(-edges:edges, -edges:edges);
+    filt = 1/(2 * pi * sigma^2) * exp(-(coords_x.^2 + coords_y.^2) / (2 * sigma^2));
+    filtered_img = filter(img, k, filt);
+end
+
+function [] = section_25(normalized_photo)
+    noise_types = ["salt & pepper" "gaussian" "speckle"];
+    for noise = noise_types
+        noisy_dog = imnoise(normalized_photo, noise);
+        %mean
+        figure;
+        colormap gray;
+        sgtitle(['Applying mean filter to ' noise ' noised image'])
+        subplot(2,2,1);
+        imagesc(normalized_photo);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Original Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+        
+        subplot(2,2,2);
+        imagesc(noisy_dog);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Noised Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+    
+        K = [3 9];
+        for i = 1:length(K)
+            mean_dog = mean_filter(noisy_dog, K(i));
+            subplot(2,2,i+2);
+            imagesc(mean_dog);
+            set(gca,'XTick',[], 'YTick', [])
+            title(['k = ' num2str(K(i))])
+            colorbar;
+            caxis manual
+            caxis([0 1]);
+        end
+        %median
+        figure;
+        colormap gray;
+        sgtitle(['Applying median filter to ' noise ' noised image'])
+        subplot(2,2,1);
+        imagesc(normalized_photo);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Original Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+        
+        subplot(2,2,2);
+        imagesc(noisy_dog);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Noised Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+    
+        K = [3 9];
+        for i = 1:length(K)
+            mean_dog = median_filter(noisy_dog, K(i));
+            subplot(2,2,i+2);
+            imagesc(mean_dog);
+            set(gca,'XTick',[], 'YTick', [])
+            title(['k = ' num2str(K(i))])
+            colorbar;
+            caxis manual
+            caxis([0 1]);
+        end
+        %gaussian
+        figure;
+        colormap gray;
+        sgtitle(['Applying gaussian filter to ' noise ' noised image'])
+        subplot(2,2,1);
+        imagesc(normalized_photo);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Original Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+        
+        subplot(2,2,2);
+        imagesc(noisy_dog);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Noised Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+        
+        K = [3 9];
+        Sigma = [1 1];
+        for i = 1:length(K)
+            gaussian_dog = dip_gaussian_filter(noisy_dog, K(i), Sigma(i));
+            subplot(2,2,i+2);
+            imagesc(gaussian_dog);
+            set(gca,'XTick',[], 'YTick', [])
+            title(['k = ' num2str(K(i)) ', sigma = ' num2str(Sigma(i))])
+            colorbar;
+            caxis manual
+            caxis([0 1]);
+        end
+        %diffusion
+        
+        diffused_dog = imdiffusefilt(noisy_dog);
+    
+        figure;
+        colormap gray;
+        sgtitle(['Applying anisotropic diffusion filter to ' noise ' noised image']);
+    
+        subplot(2,2,1);
+        imagesc(normalized_photo);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Original Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+    
+        subplot(2,2,2);
+        imagesc(noisy_dog);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Noised Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+    
+        subplot(2,2,3);
+        imagesc(diffused_dog);
+        set(gca,'XTick',[], 'YTick', [])
+        title('Filtered Image')
+        colorbar;
+        caxis manual
+        caxis([0 1]);
+    
+    end
 end
