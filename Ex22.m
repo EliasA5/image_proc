@@ -64,10 +64,52 @@ subplot(1,3,3);imshow(lab_img(:,:,3));title('b');colorbar;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Section 5
+cap1 = double(imread("cap2.png"));
+cap1_norm = dip_normalize_rgb_img(cap1);
+[cap1_circled, cap1_filter] = dip_find_cap(cap1_norm);
+figure;sgtitle('Cap 1')
+subplot(1,2,1);title('Circled');imshow(cap1_circled);
+subplot(1,2,2);title('Filter');imshow(cap1_filter);
+
+cap2 = double(imread("cap2.png"));
+cap2_norm = dip_normalize_rgb_img(cap2);
+[cap2_circled, cap2_filter] = dip_find_cap(cap2_norm);
+figure;sgtitle('Cap 2')
+subplot(1,2,1);title('Circled');imshow(cap2_circled);
+subplot(1,2,2);title('Filter');imshow(cap2_filter);
+
+cap3 = double(imread("cap3.png"));
+cap3_norm = dip_normalize_rgb_img(cap3);
+[cap3_circled, cap3_filter] = dip_find_cap(cap3_norm);
+figure;sgtitle('Cap 3')
+subplot(1,2,1);title('Circled');imshow(cap3_circled);
+subplot(1,2,2);title('Filter');imshow(cap3_filter);
 
 %TODO: section 5
 
-
+function [cap_img, filter] = dip_find_cap(img)
+    [cap_h, cap_s, cap_v] = dip_rgb2hsv(img(:,:,1), img(:,:,2), img(:,:,3));
+    cap_h_filt = zeros(size(cap_h));
+    cap_s_filt = zeros(size(cap_s));
+    cap_v_filt = zeros(size(cap_v));
+    cap_h_filt((cap_h > 0.6) & (cap_h < 0.7)) = 1;
+    cap_s_filt((cap_s > 0.40) & (cap_s < 0.88)) = 1;
+    cap_v_filt((cap_v > 0.07) & (cap_v < 0.30)) = 1;
+    
+    filter = cap_h_filt .* cap_s_filt .* cap_v_filt;
+    filter = medfilt2(filter, [7 7]);
+    
+    [x,y] = meshgrid(1:size(filter,2), 1:size(filter,1));
+    min_x = min(x(filter == 1));
+    max_x = max(x(filter == 1));
+    min_y = min(y(filter == 1));
+    max_y = max(y(filter == 1));
+    
+    circle_x = floor((min_x+max_x)/2);
+    circle_y = floor((min_y+max_y)/2);
+    
+    cap_img = insertShape(img, 'circle', [circle_x circle_y (max_x-circle_x + 3)]);
+end
 
 function [h, s, v] = dip_rgb2hsv(r, g, b)
     %according to the equations stated in:
@@ -75,11 +117,12 @@ function [h, s, v] = dip_rgb2hsv(r, g, b)
     [C_max, I_max] = max(cat(3, r, g, b), [], 3);
     C_min = min(cat(3, r, g, b), [], 3);
     delta = C_max - C_min;
-    mask = C_max ~= 0;
-    s = ((delta.*mask) ./(C_max.*mask));
+    mask = (C_max ~= 0);
+    s = zeros(size(C_max));
+    s(mask) = delta(mask) ./ C_max(mask);
     s(isnan(s)) = 0;
 
-    h = zeros(size(s));
+    h = zeros(size(C_max));
     r_mask = (I_max == 1);
     h(r_mask) = mod( (g(r_mask)-b(r_mask)) ./ (delta(r_mask)), 6);
     g_mask = (I_max == 2);
@@ -114,5 +157,4 @@ end
 
 function [gray_img] = dip_rgb2gray(img)
     gray_img = 0.2989 * img(:,:,1) + 0.5870 * img(:,:,2) + 0.1140 * img(:,:,3);
-
 end
