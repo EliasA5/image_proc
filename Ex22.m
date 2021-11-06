@@ -64,7 +64,7 @@ subplot(1,3,3);imshow(lab_img(:,:,3));title('b');colorbar;
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% Section 5
-cap1 = double(imread("cap2.png"));
+cap1 = double(imread("cap1.png"));
 cap1_norm = dip_normalize_rgb_img(cap1);
 [cap1_circled, cap1_filter] = dip_find_cap(cap1_norm);
 figure;sgtitle('Cap 1')
