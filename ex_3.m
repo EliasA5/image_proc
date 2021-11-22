@@ -3,7 +3,7 @@ clc
 disp('Elias Assaf 315284729 - Jameel Nassar 206985152')
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Section 1
+%% Section 1.1
 
 beatles = imread("beatles.png");
 beatles_norm = double(rgb2gray(beatles))/255;
@@ -25,8 +25,7 @@ subplot(2,2,4);imshow(real(beatles_ifft2_matlab));title("matlab ifft");
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Section 2
-close all;
+%% Section 1.2.1
 load("freewilly.mat");
 imprisoned_willy = freewilly;
 figure;imshow(imprisoned_willy);title("imprisoned willy");
@@ -37,12 +36,52 @@ figure;imshow(prison);title("prison")
 %freed_willy = imprisoned_willy - prison;
 %figure;imshow(freed_willy);title("freed willy by -");
 prison_fft = fft2(prison);
-figure;imshow(abs((prison_fft)));title("prison fft2")
+figure;imshow(abs(dip_fftshift(prison_fft)));title("prison fft2")
 Free_Willy(imprisoned_willy);
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%% Section 3
+%% Section 1.2.2
 
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Section 3
+beatles = imread("beatles.png");
+beatles_norm = double(rgb2gray(beatles))/255;
+beatles_dct2 = dct2(beatles_norm);
+[M_beatles, N_beatles] = size(beatles_norm);
+figure;imagesc(log(abs(beatles_dct2)));colormap(jet(64));colorbar;title('dct of beatles image')
+half_ones_rand = [ones(1,M_beatles*N_beatles/2) zeros(1,M_beatles*N_beatles/2)];
+for i = 1:7 %shuffle few times
+    half_ones_rand = half_ones_rand(randperm(length(half_ones_rand))); 
+end
+half_ones_rand = reshape(half_ones_rand, [M_beatles, N_beatles]);
+beatles_dct2_half_rand = half_ones_rand .* beatles_dct2;
+beatles_idct2_half_rand = idct2(beatles_dct2_half_rand);
+figure;sgtitle("half values removed randomly from dct domain");
+subplot(1,2,1);imshow(beatles_norm);title("original image");
+subplot(1,2,2);imshow(beatles_idct2_half_rand);title("50% values removed randomly");
+
+beatles_dct2_half_lowest = beatles_dct2;
+beatles_dct2_half_lowest(beatles_dct2_half_lowest <= median(beatles_dct2_half_lowest, 'all')) = 0;
+beatles_idct2_half_lowest = idct2(beatles_dct2_half_lowest);
+figure;sgtitle("half lowest values removed from dct domain (values lower than the median)");
+subplot(1,2,1);imshow(beatles_norm);title("original image")
+subplot(1,2,2);imshow(beatles_idct2_half_lowest);title("50% lowest values removed")
+
+a = 0.3;
+figure;sgtitle("values from (-a,a) removed from dct domain");
+subplot(2,3,1);imshow(beatles_norm);title('original image');
+i=2;
+for a = [0.02 0.05 0.07 0.09 0.15]
+    beatles_dct2_no_a = beatles_dct2;
+    beatles_dct2_no_a(beatles_dct2_no_a < a & beatles_dct2_no_a > -a) = 0;
+    beatles_idct2_no_a = idct2(beatles_dct2_no_a);
+    perc = sum(beatles_dct2_no_a == 0, 'all') / numel(beatles_dct2);
+    subplot(2,3,i);imshow(beatles_idct2_no_a);title(['a = ' num2str(a) ', percentage = ' num2str(perc)])
+    i = i+1;
+end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% functions
 function [img_fft2] = dip_fft2(I)
     [M,N] = size(I);
     M_vec = (0:M-1);
