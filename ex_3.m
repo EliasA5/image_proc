@@ -61,9 +61,10 @@ subplot(1,2,1);imshow(beatles_norm);title("original image");
 subplot(1,2,2);imshow(beatles_idct2_half_rand);title("50% values removed randomly");
 
 beatles_dct2_half_lowest = beatles_dct2;
-beatles_dct2_half_lowest(beatles_dct2_half_lowest <= median(beatles_dct2_half_lowest, 'all')) = 0;
+beatles_dct2_abs_median = median(abs(beatles_dct2_half_lowest), 'all');
+beatles_dct2_half_lowest(beatles_dct2_half_lowest < beatles_dct2_abs_median & beatles_dct2_half_lowest > -beatles_dct2_abs_median) = 0;
 beatles_idct2_half_lowest = idct2(beatles_dct2_half_lowest);
-figure;sgtitle("half lowest values removed from dct domain (values lower than the median)");
+figure;sgtitle("half absolute lowest values removed from dct domain (values lower than the median)");
 subplot(1,2,1);imshow(beatles_norm);title("original image")
 subplot(1,2,2);imshow(beatles_idct2_half_lowest);title("50% lowest values removed")
 
