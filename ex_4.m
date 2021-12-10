@@ -85,12 +85,11 @@ function [hough_mat,R_vec,theta_vec] = dip_hough_lines(BW, R_0, theta_0)
     theta_vec = -90:theta_0:90;
     hough_mat = zeros(length(R_vec),length(theta_vec));
     [x_vec, y_vec] = find(BW == 1);
-    x_vec = x_vec.' - M/2;
-    y_vec = y_vec.' - N/2;
+
 
     for i = 1:length(theta_vec)
         theta = theta_vec(i) * (pi / 180);
-        r = cos(theta) .* y_vec + sin(theta) .* x_vec;
+        r = cos(theta) .* y_vec.' + sin(theta) .* x_vec.';
         r = interp1(R_vec, R_vec, r, 'nearest');
         r = round((r+R_value + 1)/R_0);
         for j = r
