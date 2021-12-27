@@ -97,13 +97,6 @@ subplot(1,2,2);imshow(crooked_mona);hold on;plot(points_crooked.selectStrongest(
 %some ref
 %https://www.mathworks.com/help/vision/ug/find-image-rotation-and-scale-using-automated-feature-matching.html
 
-matched_f = find_matching_features(points_straight,points_crooked);
-
-%figure;
-%subplot(1,2,1);imshow(straight_mona);hold on;plot(points_straight(matched_f(:,1)));
-%subplot(1,2,2);imshow(crooked_mona);hold on;plot(points_crooked(matched_f(:,2)));
-
-
 
 [featuresOriginal,  validPtsOriginal]  = extractFeatures(straight_mona,  points_straight);
 [featuresDistorted, validPtsDistorted] = extractFeatures(crooked_mona, points_crooked);
@@ -114,13 +107,16 @@ matchedOriginal  = validPtsOriginal(indexPairs(:,1));
 matchedDistorted = validPtsDistorted(indexPairs(:,2));
 
 
-
-
+figure;
+showMatchedFeatures(straight_mona,crooked_mona,matchedOriginal,matchedDistorted);
+title('Putatively matched points (including outliers)');
+legend('ptsOriginal','ptsDistorted');
 
 
 
 
 function matched = find_matching_features(features1,features2)
+%shit
 %find the common features based on some checks on the featues
 idx = 0;
 N1 = length(features1);
@@ -137,9 +133,7 @@ for i = 1:N1
         if(scale_check && sign_check && metric_check)
             idx = idx + 1;
             matched(idx,:) = [i j];%add the matched index
-
         end
-
     end
 end
 non_zero = all(matched ~= [0 0],2);
