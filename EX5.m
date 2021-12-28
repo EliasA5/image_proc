@@ -103,8 +103,20 @@ subplot(1,2,2);imshow(crooked_mona);hold on;plot(points_crooked.selectStrongest(
 
 indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
 
+
+%calculate the angle between two points and zeros axis
 matchedOriginal  = validPtsOriginal(indexPairs(:,1));
 matchedDistorted = validPtsDistorted(indexPairs(:,2));
+
+Original_ref = matchedOriginal(1);
+Original_nref = matchedOriginal(2:end);
+Distorted_ref = matchedDistorted(1);
+Distorted_nref = matchedDistorted(2:end);
+
+%https://stackoverflow.com/questions/22200453/calculate-angle-between-horizontal-axis-and-two-points
+angle_o = atan2((Original_ref.Location(:,2) - Original_nref.Location(:,2)),(Original_ref.Location(:,1) - Original_nref.Location(:,1)));
+angle_d = atan2((Distorted_ref.Location(:,2) - Distorted_nref.Location(:,2)),(Distorted_ref.Location(:,1) - Distorted_nref.Location(:,1)));
+avg_rotate = mean(angle_d - angle_o) * 180/pi;
 
 
 figure;
@@ -112,31 +124,72 @@ showMatchedFeatures(straight_mona,crooked_mona,matchedOriginal,matchedDistorted)
 title('Putatively matched points (including outliers)');
 legend('ptsOriginal','ptsDistorted');
 
+fixed_mona = imrotate(crooked_mona,avg_rotate);
+% Remove zero rows
+fixed_mona( all(~fixed_mona,2), : ) = [];
+% Remove zero columns
+fixed_mona( :, all(~fixed_mona,1) ) = [];
+
+figure;
+subplot(1,2,1);imshow(straight_mona);
+subplot(1,2,2);imshow(fixed_mona);
 
 
+%%
+%%1.3
+mona_org = imread("mona_org.jpg");
+mona_org = double(rgb2gray(mona_org))/256;
 
-function matched = find_matching_features(features1,features2)
-%shit
-%find the common features based on some checks on the featues
-idx = 0;
-N1 = length(features1);
-N2 = length(features2);
-matched = zeros(N1*N2,2);
-for i = 1:N1
-    f1 = features1(i);
-    for j = 1:N2
-        f2 = features2(j);
-        
-        scale_check = (abs(f1.Scale - f2.Scale)  < 1);
-        sign_check = f1.SignOfLaplacian == f2.SignOfLaplacian;
-        metric_check = (abs(f1.Metric - f2.Metric)  < 00);
-        if(scale_check && sign_check && metric_check)
-            idx = idx + 1;
-            matched(idx,:) = [i j];%add the matched index
-        end
-    end
-end
-non_zero = all(matched ~= [0 0],2);
-matched = matched(non_zero,:);%get the non zeros
+mona_images = {'Mona1_Y.jpg';'Mona2_Y.jpg';'Mona3_Y.jpg';'Mona4_Y.jpg';'Mona5_N.jpg';'Mona6_N.jpg';'Mona7_Y.jpg';'Mona8_Y.jpg';'Mona9_Y.jpg';'Mona10_Y.jpg';'Mona11_N.jpg';'Mona12_N.jpg'};
+
+for idx = 1:length(mona_images)
+    img_name = mona_images{idx};
+    mona_img_name = [pwd '\mona\' img_name];
+    mona_fake = double(rgb2gray(imread(mona_img_name)))/256;
+    len = its_mona(mona_org,mona_fake);
+    fprintf('We found %i similar features points in %s \n', len,img_name);
 end
 
+
+
+function same = its_mona(mona,img)
+
+same = 0;
+
+mona_f = detectSURFFeatures(mona,'ROI', [59, 5, 128, 120],'NumOctaves', 5,'NumScaleLevels', 8);
+img_f = detectSURFFeatures(img);
+[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
+[featuresDistorted, ~] = extractFeatures(img, img_f);
+indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
+same = same + length(indexPairs);
+
+mona_f = detectFASTFeatures(mona,'ROI', [59, 5, 128, 120]);
+img_f = detectFASTFeatures(img);
+[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
+[featuresDistorted, ~] = extractFeatures(img, img_f);
+indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
+same = same + length(indexPairs);
+
+mona_f = detectMSERFeatures(mona,'ROI', [59, 5, 128, 120]);
+img_f = detectMSERFeatures(img);
+[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
+[featuresDistorted, ~] = extractFeatures(img, img_f);
+indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
+same = same + length(indexPairs);
+
+mona_f = detectSIFTFeatures(mona);
+img_f = detectSIFTFeatures(img);
+[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
+[featuresDistorted, ~] = extractFeatures(img, img_f);
+indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
+same = same + length(indexPairs);
+
+
+mona_f = detectHarrisFeatures(mona,'ROI', [59, 5, 128, 120]);
+img_f = detectHarrisFeatures(img);
+[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
+[featuresDistorted, ~] = extractFeatures(img, img_f);
+indexPairs = matchFeatures(featuresOriginal, featuresDistorted);%,'Method','Approximate');
+same = same + length(indexPairs);
+
+end
