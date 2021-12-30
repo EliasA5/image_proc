@@ -150,46 +150,66 @@ for idx = 1:length(mona_images)
     fprintf('We found %i similar features points in %s \n', len,img_name);
 end
 
+%%
+%section 2
+id1 = '315284729';
 
+figure;
+ID2QR(id1);
+
+%%
+qr_easy = imread('./1.jpg');
+qr_easy = double(rgb2gray(qr_easy))/256;
+figure;imshow(qr_easy);
+%qr_easy_corners = ginput(4);
+qr_easy_corners = [3638 2598;2309 2732;3700 1140;2394 921];
+
+
+
+qr_medium = imread('./2.jpg');
+qr_medium = double(rgb2gray(qr_medium))/256;
+figure;imshow(qr_medium);
+%qr_medium_corners = ginput(4);
+qr_medium_corners = [3433 2522;2701 2745;3482 1216;2773 935];
+
+qr_hard = imread('./3.jpg');
+qr_hard = double(rgb2gray(qr_hard))/256;
+figure;imshow(qr_hard);
+%qr_hard_corners = ginput(4);
+qr_hard_corners = [3861 2772;3433 3129;3937 1278;3562 859];
+
+
+
+%%
+fixed_points = [0 0; 128 0;0 128;128 128];
+tform = fitgeotrans(fixed_points,qr_easy_corners,'projective');
+invtform = invert(tform);
+out = imwarp(qr_easy,invtform);
+figure;imshow(out);
+
+tform = fitgeotrans(fixed_points,qr_medium_corners,'projective');
+invtform = invert(tform);
+out = imwarp(qr_medium,invtform);
+figure;imshow(out);
+
+tform = fitgeotrans(fixed_points,qr_hard_corners,'projective');
+invtform = invert(tform);
+out = imwarp(qr_hard,invtform);
+figure;imshow(out);
+
+%%
 
 function same = its_mona(mona,img)
 
 same = 0;
 
-mona_f = detectSURFFeatures(mona,'ROI', [59, 5, 128, 120],'NumOctaves', 5,'NumScaleLevels', 8);
-img_f = detectSURFFeatures(img);
+for num_octave=1:5
+mona_f = detectSURFFeatures(mona,'ROI', [80, 8, 80, 120],'NumOctaves', num_octave,'NumScaleLevels', 10,'MetricThreshold',300);
+img_f = detectSURFFeatures(img,'NumOctaves', num_octave,'NumScaleLevels', 10,'MetricThreshold',300);
 [featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
 [featuresDistorted, ~] = extractFeatures(img, img_f);
 indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
 same = same + length(indexPairs);
-
-mona_f = detectFASTFeatures(mona,'ROI', [59, 5, 128, 120]);
-img_f = detectFASTFeatures(img);
-[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
-[featuresDistorted, ~] = extractFeatures(img, img_f);
-indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
-same = same + length(indexPairs);
-
-mona_f = detectMSERFeatures(mona,'ROI', [59, 5, 128, 120]);
-img_f = detectMSERFeatures(img);
-[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
-[featuresDistorted, ~] = extractFeatures(img, img_f);
-indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
-same = same + length(indexPairs);
-
-mona_f = detectSIFTFeatures(mona);
-img_f = detectSIFTFeatures(img);
-[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
-[featuresDistorted, ~] = extractFeatures(img, img_f);
-indexPairs = matchFeatures(featuresOriginal, featuresDistorted);
-same = same + length(indexPairs);
-
-
-mona_f = detectHarrisFeatures(mona,'ROI', [59, 5, 128, 120]);
-img_f = detectHarrisFeatures(img);
-[featuresOriginal,  ~]  = extractFeatures(mona,  mona_f);
-[featuresDistorted, ~] = extractFeatures(img, img_f);
-indexPairs = matchFeatures(featuresOriginal, featuresDistorted);%,'Method','Approximate');
-same = same + length(indexPairs);
+end
 
 end
