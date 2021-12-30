@@ -158,44 +158,49 @@ figure;
 ID2QR(id1);
 
 %%
-qr_easy = imread('./1.jpg');
+qr_easy = imread('./11.jpg');
 qr_easy = double(rgb2gray(qr_easy))/256;
 figure;imshow(qr_easy);
 %qr_easy_corners = ginput(4);
-qr_easy_corners = [3638 2598;2309 2732;3700 1140;2394 921];
+%qr_easy_corners = [3638 2598;2309 2732;3700 1140;2394 921];
+qr_easy_corners = [554 462;1867 336;485 1938;1786 2151];
 
 
-
-qr_medium = imread('./2.jpg');
+qr_medium = imread('./21.jpg');
 qr_medium = double(rgb2gray(qr_medium))/256;
 figure;imshow(qr_medium);
 %qr_medium_corners = ginput(4);
-qr_medium_corners = [3433 2522;2701 2745;3482 1216;2773 935];
+%qr_medium_corners = [3433 2522;2701 2745;3482 1216;2773 935];
+qr_medium_corners = [490 497;1214 266;442 1811;1130 2090];
 
-qr_hard = imread('./3.jpg');
+
+qr_hard = imread('./31.jpg');
 qr_hard = double(rgb2gray(qr_hard))/256;
 figure;imshow(qr_hard);
 %qr_hard_corners = ginput(4);
-qr_hard_corners = [3861 2772;3433 3129;3937 1278;3562 859];
-
+%qr_hard_corners = [3861 2772;3433 3129;3937 1278;3562 859];
+qr_hard_corners = [431 492;863 117;362 1983;728 2403];
 
 
 %%
-fixed_points = [0 0; 128 0;0 128;128 128];
-tform = fitgeotrans(fixed_points,qr_easy_corners,'projective');
+fixed_points = [1 1; 256 1; 1 256; 256 256];
+tform = fitgeotrans(fixed_points, qr_easy_corners, 'projective');
 invtform = invert(tform);
-out = imwarp(qr_easy,invtform);
-figure;imshow(out);
+out = imwarp(qr_easy, invtform, 'linear');
 
-tform = fitgeotrans(fixed_points,qr_medium_corners,'projective');
-invtform = invert(tform);
-out = imwarp(qr_medium,invtform);
-figure;imshow(out);
+figure;imshow(out);colormap gray;
 
-tform = fitgeotrans(fixed_points,qr_hard_corners,'projective');
+tform = fitgeotrans(fixed_points, qr_medium_corners, 'projective');
 invtform = invert(tform);
-out = imwarp(qr_hard,invtform);
-figure;imshow(out);
+out = imwarp(qr_medium, invtform, 'linear');
+
+figure;imshow(out);colormap gray;
+
+tform = fitgeotrans(fixed_points, qr_hard_corners, 'projective');
+invtform = invert(tform);
+out = imwarp(qr_hard, invtform, 'linear');
+
+figure;imshow(out);colormap gray;
 
 %%
 
